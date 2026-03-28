@@ -83,6 +83,45 @@ def delete_user(user_id):
     del users[user_id]
     return jsonify({"message": f"Deleted user {user_id}."}), 200
 
+# POST /predict_house_price
+@app.route("/predict_house_price", methods=["POST"])
+def predict_house_price():
+    try:
+        data = request.get_json()
+
+        pets = bool(data["pets"])
+        cats = pets
+        dogs = pets
+
+        sample_data = [
+            str(data["city"]),
+            str(data["province"]),
+            float(data["latitude"]),
+            float(data["longitude"]),
+            str(data["lease_term"]),
+            str(data["type"]),
+            float(data["beds"]),
+            float(data["baths"]),
+            float(data["sq_feet"]),
+            str(data["furnishing"]),
+            str(data["smoking"]),
+            cats,
+            dogs,
+        ]
+
+        sample_df = pd.DataFrame([sample_data], columns=PREDICTION_COLUMNS)
+
+        model = joblib.load(MODEL_PATH)
+        predicted_price = model.predict(sample_df)
+
+        return jsonify({"predicted_price": float(predicted_price[0])}), 200
+
+    except (ValueError, TypeError) as e:
+        return jsonify({"message": str(e)}), 400
+    except Exception as e:
+        return jsonify({"message": f"Prediction failed: {str(e)}"}), 400
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5050)
